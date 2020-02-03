@@ -17,7 +17,6 @@ GameObject:
   - component: {fileID: 1547558400775884166}
   - component: {fileID: 1285843323971233649}
   - component: {fileID: 1924084394096186331}
-  - component: {fileID: -1126073152135491570}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -64,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 409bf720e9924426b9f253cf037a8f4e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -120,7 +119,7 @@ Rigidbody2D:
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &7987790559514117867
 MonoBehaviour:
@@ -154,7 +153,6 @@ MonoBehaviour:
   OwnershipTransfer: 0
   ObservedComponents:
   - {fileID: 1285843323971233649}
-  - {fileID: 0}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -186,19 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   distance: 7
-  height: 3
+  height: 0
   heightSmoothLag: 0
   centerOffset: {x: 0, y: 0, z: 0}
   followOnStart: 1
---- !u!114 &-1126073152135491570
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7987790559514117866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe9dc2c13f6280d41a221ea078f0c318, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

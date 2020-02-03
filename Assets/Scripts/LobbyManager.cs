@@ -1,45 +1,94 @@
 ﻿using Photon.Pun;
-using System.Collections;
-using System.Collections.Generic;
+using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
+using LogsClientAPI;
 
 public class LobbyManager : MonoBehaviourPunCallbacks
 {
-    public Text LogText;
+    public Text userName;
+    public Text currentServer;
+    public Text ping;
+    public Text roomName;
+    private bool newJoin;
+    private  Regions Regions;
+    private Notices notice;
+    public static LogsClient client;
+    private void Awake()
+    {
+        PhotonNetwork.AutomaticallySyncScene = true;
+        client = new LogsClient("http://localhost:60047/api/");
+    }
     void Start()
     {
-        PhotonNetwork.NickName = "Player" + Random.Range(1,5).ToString();
-        Log("Player name is " + PhotonNetwork.NickName);
-        PhotonNetwork.AutomaticallySyncScene = true;
+        currentServer.text = "Connecting...";
         PhotonNetwork.ConnectUsingSettings();
+        PhotonNetwork.NickName = "Player";
+        newJoin = false;
+        Regions = GetComponent<Regions>();
+        notice = GetComponent<Notices>();
+    }
+
+    private void Update()
+    {
+        if(PhotonNetwork.IsConnected)
+            ping.text = PhotonNetwork.GetPing().ToString();
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        base.OnDisconnected(cause);
+        if (!newJoin)
+            PhotonNetwork.ConnectUsingSettings();
+        else
+            OnNewJoin();
+    }
+
+    public void OnNewJoin()
+    {
+        newJoin = true;
+        var region = Regions.GetRegionShortName(currentServer.text);
+        if(PhotonNetwork.IsConnected)
+            PhotonNetwork.Disconnect();
+        currentServer.text = "Connecting...";
+        PhotonNetwork.ConnectToRegion(region);
+        notice.WaitToConnect();
     }
 
     public override void OnConnectedToMaster()
     {
-        Log("Connected to Master");
+        currentServer.text = Regions.GetRegionName(PhotonNetwork.CloudRegion);
+        notice.Connected();
     }
 
     public void CreateRoom()
     {
-        PhotonNetwork.CreateRoom("room", new Photon.Realtime.RoomOptions { MaxPlayers = 7}) ;
+        TypedLobby sqlLobby = new TypedLobby("myLobby", LobbyType.SqlLobby);
+        string sqlLobbyFilter = "C0";
+        SetNickName(userName.text);
+        RoomOptions roomOptions = new RoomOptions
+        {
+            MaxPlayers = 5,
+            CustomRoomProperties = new ExitGames.Client.Photon.Hashtable() { { sqlLobbyFilter, "0" } },
+            CustomRoomPropertiesForLobby = new string[] { sqlLobbyFilter }
+        };
+        if (roomName.text.Length != 0)
+        {
+            client.PostRoom(roomName.text);
+            int roomID = client.GetID("Rooms/", roomName.text, "IDRoom");
+            client.PostPlayer(PhotonNetwork.NickName, roomID);
+            PhotonNetwork.CreateRoom(roomName.text, roomOptions, sqlLobby);
+        }
+        else notice.EmptyRoomName();
     }
-
-    public void JoinRoom()
-    {
-        PhotonNetwork.JoinRoom("room");
-    }
-
     public override void OnJoinedRoom()
     {
-        Log("Joined the room");
-        PhotonNetwork.LoadLevel("Game");
+       PhotonNetwork.LoadLevel("Game");
     }
 
-    private void Log(string message)
+    private void SetNickName(string name)
     {
-        Debug.Log(message);
-        LogText.text += "\n";
-        LogText.text += message;
+        if (name.Length != 0)
+            PhotonNetwork.NickName = name;
     }
 }

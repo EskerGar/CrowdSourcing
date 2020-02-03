@@ -5,6 +5,12 @@ using UnityEngine;
 
 public class DirectionLogic : MonoBehaviour, IPunObservable
 {
+    public static bool direction;
+
+    private void Start()
+    {
+        direction = false;
+    }
     public void Direction()
     {
         gameObject.GetComponent<SpriteRenderer>().enabled = true;
@@ -12,23 +18,25 @@ public class DirectionLogic : MonoBehaviour, IPunObservable
         Vector3 mousePos;
         mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         direction = (mousePos - transform.parent.position).normalized;
-        gameObject.transform.position = transform.parent.position + direction;
-        float dx = this.transform.position.x - mousePos.x;
-        float dy = this.transform.position.y - mousePos.y;
+        var go = GameObject.FindGameObjectWithTag("Player").transform;
+        gameObject.transform.position = go.position + direction;
+        float dx = transform.position.x - mousePos.x;
+        float dy = transform.position.y - mousePos.y;
         float angle = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
         Quaternion rot = Quaternion.Euler(new Vector3(0, 0, angle + 90));
-        this.transform.rotation = rot;
+        transform.rotation = rot;
     }
 
     void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        /*if (stream.IsWriting)
-        {
-            stream.SendNext(gameObject.GetComponent<SpriteRenderer>().enabled);
-        }
-        else
-        {
-            gameObject.GetComponent<SpriteRenderer>().enabled = (bool)stream.ReceiveNext();
-        }*/
+            if (stream.IsWriting)
+            {
+                stream.SendNext(gameObject.GetComponent<SpriteRenderer>().enabled);
+            }
+            else
+            {
+                if(direction)
+                    gameObject.GetComponent<SpriteRenderer>().enabled = (bool)stream.ReceiveNext();
+            }
     }
 }
