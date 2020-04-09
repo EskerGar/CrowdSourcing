@@ -1,8 +1,9 @@
 ﻿using Photon.Pun;
 using Photon.Realtime;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
-using LogsClientAPI;
 
 public class LobbyManager : MonoBehaviourPunCallbacks
 {
@@ -13,11 +14,12 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     private bool newJoin;
     private  Regions Regions;
     private Notices notice;
-    public static LogsClient client;
+    public static LogsClientAPI client;
+    private RoomOptions roomOptions;
     private void Awake()
     {
         PhotonNetwork.AutomaticallySyncScene = true;
-        client = new LogsClient("http://localhost:60047/api/");
+        client = GetComponent<LogsClientAPI>();
     }
     void Start()
     {
@@ -60,25 +62,31 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         currentServer.text = Regions.GetRegionName(PhotonNetwork.CloudRegion);
         notice.Connected();
     }
-
+    private IEnumerator ConfigureRoom(string roomNameText, TypedLobby sqlLobby)
+    {
+        yield return StartCoroutine(client.OnCheck(roomNameText));
+        if (!client.Check)
+        {
+            yield return StartCoroutine(client.PostRoom(roomNameText, 1));
+            yield return StartCoroutine(client.GetID("Rooms/", roomName.text));
+            yield return StartCoroutine(client.PostPlayer(PhotonNetwork.NickName, client.ID));
+            PhotonNetwork.CreateRoom(roomName.text, roomOptions, sqlLobby);
+        }
+        else notice.RoomExist();
+    }
     public void CreateRoom()
     {
         TypedLobby sqlLobby = new TypedLobby("myLobby", LobbyType.SqlLobby);
         string sqlLobbyFilter = "C0";
         SetNickName(userName.text);
-        RoomOptions roomOptions = new RoomOptions
+        roomOptions = new RoomOptions
         {
             MaxPlayers = 5,
             CustomRoomProperties = new ExitGames.Client.Photon.Hashtable() { { sqlLobbyFilter, "0" } },
             CustomRoomPropertiesForLobby = new string[] { sqlLobbyFilter }
         };
         if (roomName.text.Length != 0)
-        {
-            client.PostRoom(roomName.text);
-            int roomID = client.GetID("Rooms/", roomName.text, "IDRoom");
-            client.PostPlayer(PhotonNetwork.NickName, roomID);
-            PhotonNetwork.CreateRoom(roomName.text, roomOptions, sqlLobby);
-        }
+            StartCoroutine(ConfigureRoom(roomName.text, sqlLobby));
         else notice.EmptyRoomName();
     }
     public override void OnJoinedRoom()

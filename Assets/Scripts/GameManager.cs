@@ -7,10 +7,20 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
+    public static GameManager Instanse;
+    public bool FinishMatch { get; private set; } = false;
+
+    public bool GetFinishedGame() => FinishMatch = true;
 
     private void CreatePlayer()
     {
         PhotonNetwork.InstantiateSceneObject("player", new Vector3(0, -2f, 0), Quaternion.identity);
+    }
+
+    private void Awake()
+    {
+        if (Instanse == null)
+            Instanse = this;
     }
 
     private void Start() => CreatePlayer();
